@@ -28,7 +28,10 @@ int main(){
 	else if(portalChoice==4){
 		printf("Exiting the program\n");
 	}
-} 
+	else{
+		printf("Invalid Choice! Please enter choice between (1-4));
+	}
+}
 while(choice!=4);
 	return 0;
 }

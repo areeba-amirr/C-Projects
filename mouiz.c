@@ -104,7 +104,6 @@ int main() {
                     }
                 }
             }
-
             if (success) {
                 int employeeChoice;
                 do {

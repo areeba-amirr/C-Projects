@@ -224,10 +224,7 @@ int i;
     return 0;
 }
 
-// Function definitions (abhi ke liye sirf printf statements)
-void addEmployee() {
-    printf("[Admin] Adding a new employee...\n");
-}
+// Function definitions 
 
 void markAttendance() {
     printf("[Admin] Marking attendance...\n");

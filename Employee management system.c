@@ -189,7 +189,7 @@ int i;
                                     printf("Forgot password? (Y/N): ");
                                     scanf(" %c", &opt);
                                     if (opt == 'Y' || opt == 'y') {
-                                        forgotPassword(employees[i]);
+                                        forgotPassword();
                                     }
                                 }
                             }
@@ -227,9 +227,89 @@ int i;
 // Function definitions 
 
 void markAttendance() {
-    printf("[Admin] Marking attendance...\n");
-}
+    const char* monthNames[MONTHS] = {
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    };
 
+    const int monthWorkingDays[MONTHS] = {
+        31, 28, 31, 30, 31, 30, 
+        31, 31, 30, 31, 30, 31
+    };
+
+    static int monthlyAttendance[MAX_EMPLOYEES][MONTHS] = {0};
+
+     int monthChoice;
+
+    while (1) {
+        printf("\n--- Select Month to Mark Attendance ---\n");
+        for (int i = 0; i < MONTHS; i++) {
+            printf("%d) %s\n", i + 1, monthNames[i]);
+        }
+        printf("0) Exit to Admin Menu\n");
+
+        printf("Enter month number (1-12, 0 to exit): ");
+        scanf("%d", &monthChoice);
+
+        if (monthChoice == 0) {
+            printf("Returning to Admin Menu...\n");
+            break;
+        } else if (monthChoice < 1 || monthChoice > 12) {
+            printf("Invalid month. Try again.\n");
+            continue;
+        }
+
+        int maxDays = monthWorkingDays[monthChoice - 1];
+
+        while (1) {
+            int empId;
+            printf("\nEnter Employee ID to mark attendance:\n");
+            printf("(-1 to change month, 0 to exit to Admin Menu): ");
+            scanf("%d", &empId);
+
+            if (empId == 0) {
+                printf("Exiting to Admin Menu...\n");
+                return;
+            }
+            if (empId == -1) {
+                printf("Changing month...\n");
+                break;
+            }
+
+            int found = 0;
+            for (int i = 0; i < MAX_EMPLOYEES; i++) {
+                if (employees[i].id == empId) {
+                    found = 1;
+
+                    // Check if attendance already marked
+                    if (monthlyAttendance[i][monthChoice - 1] > 0) {
+                        printf("Attendance already marked for %s in %s.\n", 
+                               employees[i].name, monthNames[monthChoice - 1]);
+                        break;
+                    }
+
+                    int presentDays;
+                    printf("Enter number of days %s was present in %s (0-%d): ", 
+                           employees[i].name, monthNames[monthChoice - 1], maxDays);
+                    scanf("%d", &presentDays);
+
+                    if (presentDays < 0 || presentDays > maxDays) {
+                        printf("Invalid input. Attendance not recorded.\n");
+                    } else {
+                        monthlyAttendance[i][monthChoice - 1] = presentDays;
+                        printf("Attendance recorded for %s: %d/%d days.\n", 
+                               employees[i].name, presentDays, maxDays);
+                    }
+                    break;
+                }
+            }
+
+            if (!found) {
+                printf("Employee ID not found. Try again.\n");
+            }
+        }
+    }
+}
 void manageLeaveRequests() {
     printf("[Admin] Managing leave requests...\n");
 }

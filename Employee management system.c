@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#define MAX_EMPLOYEES 20
+#define MAX_EMPLOYEES 10
 #define MONTHS 12
 #define FULL_WORKING_DAYS 30
 #define DAILY_WAGE 1000  // Change this as per your wage policy
@@ -15,6 +15,16 @@ typedef struct {
     char email[100];
     char password[20];
 } Employee;
+
+int totalAttendance[MAX_EMPLOYEES] = {0}; // Stores total present days out of 30
+typedef struct {
+    int sickLeave[12];       // 12 months
+    int emergencyLeave[12];
+    int halfDayLeave[12];
+    int totalLeavesYear;     // Sum of all leaves taken in the year
+} LeaveRecord;
+
+LeaveRecord leaveRecords[MAX_EMPLOYEES]; // Track leaves for each employee
 
 // Function prototypes
 void addEmployee();
@@ -42,19 +52,19 @@ Employee employees[MAX_EMPLOYEES] = {
     {118, "Zara", "zara@gmail.com", "zara999"},
     {119, "Bilal", "bilal@gmail.com", "bil321"},
     {120, "Hira", "hira@gmail.com", "hira88"},
-    {121, "Imran", "imran@gmail.com", "imran007"},
-    {122, "Asma", "asma@gmail.com", "asma123"},
-    {123, "Kamran", "kamran@gmail.com", "kam999"},
-    {124, "Nida", "nida@gmail.com", "nid234"},
-    {125, "Tariq", "tariq@gmail.com", "tar987"},
-    {126, "Hassan", "hassan@gmail.com", "has000"},
-    {127, "Rabia", "rabia@gmail.com", "rab321"},
-    {128, "Saad", "saad@gmail.com", "saad321"},
-    {129, "Aiman", "aiman@gmail.com", "aim987"},
-    {130, "Fahad", "fahad@gmail.com", "fah111"},
-    {131, "Lubna", "lubna@gmail.com", "lub123"}
+//    {121, "Imran", "imran@gmail.com", "imran007"},
+//    {122, "Asma", "asma@gmail.com", "asma123"},
+//    {123, "Kamran", "kamran@gmail.com", "kam999"},
+//    {124, "Nida", "nida@gmail.com", "nid234"},
+//    {125, "Tariq", "tariq@gmail.com", "tar987"},
+//    {126, "Hassan", "hassan@gmail.com", "has000"},
+//    {127, "Rabia", "rabia@gmail.com", "rab321"},
+//    {128, "Saad", "saad@gmail.com", "saad321"},
+//    {129, "Aiman", "aiman@gmail.com", "aim987"},
+//    {130, "Fahad", "fahad@gmail.com", "fah111"},
+//    {131, "Lubna", "lubna@gmail.com", "lub123"}
 };
-int totalAttendance[MAX_EMPLOYEES] = {0}; // Stores total present days out of 30
+//int totalAttendance[MAX_EMPLOYEES] = {0}; // Stores total present days out of 30
 int main() {
     int portalChoice;
 
@@ -263,7 +273,7 @@ void markAttendance() {
 
         while (1) {
             int empId;
-            printf("\nEnter Employee ID to mark attendance:\n");
+            printf("\nEnter Employee ID to mark attendance for this month:\n");
             printf("(-1 to change month, 0 to exit to Admin Menu): ");
             scanf("%d", &empId);
 
@@ -311,7 +321,144 @@ void markAttendance() {
     }
 }
 void manageLeaveRequests() {
-    printf("[Admin] Managing leave requests...\n");
+	
+    int empId, month, leaveCount, leaveType;
+    int mainExit = 0;
+
+    printf("[Admin] Leave Management System\n");
+
+    while (!mainExit) {
+        int choice;
+        printf("\nChoose an option:\n");
+        printf("1. Manage Monthly Leaves\n");
+        printf("2. View Annual Leave Summary\n");
+        printf("0. Exit\n");
+        printf("Enter choice: ");
+        scanf("%d", &choice);
+if(choice<0 || choice>2){
+	printf("Invalid Choice\n");
+	break;
+}
+        if (choice == 0) {
+            printf("Exiting leave management...\n");
+            break;
+        }
+
+        printf("\nEnter Employee ID: ");
+        scanf("%d", &empId);
+
+        int empIndex = -1;
+        for (int i = 0; i < MAX_EMPLOYEES; i++) {
+            if (employees[i].id == empId) {
+                empIndex = i;
+                break;
+            }
+        }
+
+        if (empIndex == -1) {
+            printf("Employee not found!\n");
+            continue;
+        }
+
+        if (choice == 1) {
+            // ---------- Monthly Leave Management ----------
+            int anotherMonth = 1;
+            while (anotherMonth) {
+                printf("\nEnter month number (1-12) to manage leaves (or 0 to go back): ");
+                scanf("%d", &month);
+
+                if (month == 0) break;
+               if (month < 1 || month > 12) {
+    printf("Invalid month!\n");
+    continue;
+}
+
+// ? Simple check if already marked
+if (leaveRecords[empIndex].sickLeave[month - 1] != 0 ||
+    leaveRecords[empIndex].emergencyLeave[month - 1] != 0 ||
+    leaveRecords[empIndex].halfDayLeave[month - 1] != 0) {
+
+    printf(" Leave already marked for month %d!\n", month);
+    continue;
+}
+
+
+                printf("How many leaves did %s take in month %d? ", employees[empIndex].name, month);
+                scanf("%d", &leaveCount);
+
+                if (leaveCount < 1 || leaveCount > 3) {
+                    printf("Each employee is allowed only 3 leaves per month.\n");
+                    continue;
+                }
+
+                int monthlySick = 0, monthlyEmergency = 0, monthlyHalf = 0;
+
+                for (int i = 0; i < leaveCount; i++) {
+                    printf("\nEnter type of leave #%d:\n", i + 1);
+                    printf("1. Sick Leave\n2. Emergency Leave\n3. Half Day\nEnter choice: ");
+                    scanf("%d", &leaveType);
+
+                    switch (leaveType) {
+                        case 1: monthlySick++; break;
+                        case 2: monthlyEmergency++; break;
+                        case 3: monthlyHalf++; break;
+                        default:
+                            printf("Invalid leave type! Please enter 1, 2, or 3.\n");
+                            i--; break;
+                    }
+                }
+
+                if (monthlySick > 1 || monthlyEmergency > 1 || monthlyHalf > 1) {
+                    printf("Leave type limit exceeded! Only 1 of each type allowed per month.\n");
+                    continue;
+                }
+
+                int totalForMonth = monthlySick + monthlyEmergency + monthlyHalf;
+                int annualSoFar = leaveRecords[empIndex].totalLeavesYear;
+
+                if (annualSoFar + totalForMonth > 36) {
+                    printf("Annual leave limit exceeded! Max 36 allowed per year.\n");
+                    continue;
+                }
+
+                // Update record
+                leaveRecords[empIndex].sickLeave[month - 1] += monthlySick;
+                leaveRecords[empIndex].emergencyLeave[month - 1] += monthlyEmergency;
+                leaveRecords[empIndex].halfDayLeave[month - 1] += monthlyHalf;
+                leaveRecords[empIndex].totalLeavesYear += totalForMonth;
+
+                printf("\n Leave record updated for %s (Month: %d)\n", employees[empIndex].name, month);
+
+                char moreMonth;
+                printf("\nDo you want to manage another month for this employee? (Y/N): ");
+                scanf(" %c", &moreMonth);
+                if (moreMonth != 'Y' && moreMonth != 'y') {
+                    anotherMonth = 0;
+                }
+            }
+
+        } else if (choice == 2) {
+            // ---------- Annual Summary ----------
+            printf("\n Annual Leave Summary for %s (ID: %d):\n", employees[empIndex].name, employees[empIndex].id);
+            printf("Month\tSick\tEmergency\tHalf Day\n");
+            for (int m = 0; m < 12; m++) {
+                printf("%d\t%d\t%d\t\t%d\n", m + 1,
+                       leaveRecords[empIndex].sickLeave[m],
+                       leaveRecords[empIndex].emergencyLeave[m],
+                       leaveRecords[empIndex].halfDayLeave[m]);
+            }
+            printf("Total Leaves Taken This Year: %d / 36\n", leaveRecords[empIndex].totalLeavesYear);
+        } else {
+            printf("Invalid choice. Try again.\n");
+        }
+
+        char moreEmp;
+        printf("\nDo you want to manage/view another employee? (Y/N): ");
+        scanf(" %c", &moreEmp);
+        if (moreEmp != 'Y' && moreEmp != 'y') {
+            mainExit = 1;
+        }
+    }
 }
 
 void scheduleShifts() {

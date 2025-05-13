@@ -117,23 +117,19 @@ int main() {
                     printf("\n---Admin Menu---\n");
                     printf("1) Mark Attendance\n");
                     printf("2) Manage Leave Requests\n");
-                    printf("3) Schedule Shifts\n");
-                    printf("4) Calculate Salary\n");
-                    printf("5) Send Notifications\n");
-                    printf("6) Logout\n");
-                    printf("Enter your choice (1-6): ");
+                    printf("3) Calculate Salary\n");
+                    printf("4) Logout\n");
+                    printf("Enter your choice (1-4): ");
                     scanf("%d", &adminChoice);
 
                     switch (adminChoice) {
                         case 1: markAttendance(); break;
                         case 2: manageLeaveRequests(); break;
-                        case 3: scheduleShifts(); break;
-                        case 4: calculateSalary(); break;
-                        case 5: sendNotifications(); break;
-                        case 6: printf("Logging out...\n"); break;
+                        case 3: calculateSalary(); break;
+                        case 4: printf("Logging out...\n"); break;
                         default: printf("Invalid choice!\n"); break;
                     }
-                } while (adminChoice != 6);
+                } while (adminChoice != 4);
             }
         }
         else if (portalChoice == 2) {
@@ -158,59 +154,37 @@ int i;
                                 int employeeChoice;
                 do {
                     printf("\n---Employee Menu---\n");
-                    printf("1) Apply for Leave\n");
-                    printf("2) View Salary\n");
-                    printf("3) View Leave Status\n");
-                    printf("4) Enter Preferred Shifts\n");
-                    printf("5) View Assigned Shifts\n");
-                    printf("6) Check Performance\n");
-                    printf("7) Forgot Password\n");
-                    printf("8) Logout\n");
-                    printf("Enter your choice (1-8): ");
+                    printf("1) View Salary\n");
+                    printf("2) View Leave Status\n");
+                    printf("3) Check Performance\n");
+                    printf("4) Logout\n");
+                    printf("Enter your choice (1-4): ");
                     scanf("%d", &employeeChoice);
 
                     switch (employeeChoice) {
                         case 1:
-                            applyForLeave();
+                           viewSalary();
                             break;
                         case 2:
-                            viewSalary();
-                            break;
-                        case 3:
                             viewLeaveStatus();
                             break;
-                        case 4:
-                            enterPreferredShifts();
-                            break;
-                        case 5:
-                            viewAssignedShifts();
-                            break;
-                        case 6:
+                        case 3:
                             checkPerformance();
                             break;
-                        case 7:
-                            forgotPassword();
-                            break;
-                        case 8:
-                            printf("Logging out...\n");
+                        case 4:
+                           printf("Logging out...\n");
                             break;
                         default:
-                            printf("Invalid choice! Please select between 1-8.\n");
+                            printf("Invalid choice! Please select between 1-4.\n");
                             break;
                     }
-                } while (employeeChoice != 8);
+                } while (employeeChoice != 4);
                                 break;
                             } else {
                                 passAttempts--;
                                 printf("Incorrect password! Attempts left: %d\n", passAttempts);
                                 if (passAttempts == 0) {
                                     printf("Too many incorrect password attempts.\n");
-                                    char opt;
-                                    printf("Forgot password? (Y/N): ");
-                                    scanf(" %c", &opt);
-                                    if (opt == 'Y' || opt == 'y') {
-                                        forgotPassword();
-                                    }
                                 }
                             }
                         }

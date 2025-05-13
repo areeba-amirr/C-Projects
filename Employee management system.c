@@ -4,17 +4,10 @@
 #define MAX_EMPLOYEES 10
 #define MONTHS 12
 #define FULL_WORKING_DAYS 30
-//#define DAILY_WAGE 1000  // Change this as per your wage policy
-
 #define BASE_SALARY_PER_DAY 3000
 #define OVERTIME_PER_DAY 1000
 
 int salaryRecord[MAX_EMPLOYEES][MONTHS] = {0};  // Stores monthly salary for each employee
-
-
-
-//int salaryRecords[MAX_EMPLOYEES][MONTHS] = {0}; // Monthly salaries for each employee
-
 
 int monthlyAttendance[MAX_EMPLOYEES][MONTHS] = {0};  // place this globally
 
@@ -37,19 +30,14 @@ typedef struct {
 LeaveRecord leaveRecords[MAX_EMPLOYEES]; // Track leaves for each employee
 
 // Function prototypes
-void addEmployee();
+
 void markAttendance();
 void manageLeaveRequests();
-void scheduleShifts();
 void calculateSalary();
-void sendNotifications();
-void applyForLeave();
 void viewSalary();
 void viewLeaveStatus();
-void enterPreferredShifts();
-void viewAssignedShifts();
 void checkPerformance();
-void forgotPassword();
+
 
 //Hardcoded data
 Employee employees[MAX_EMPLOYEES] = {
@@ -445,10 +433,6 @@ if (leaveRecords[empIndex].sickLeave[month - 1] != 0 ||
     }
 }
 
-void scheduleShifts() {
-    printf("[Admin] Scheduling shifts...\n");
-}
-
 void calculateSalary() {
     int choice;
     printf("\n[Admin] Salary Calculation System\n");
@@ -528,14 +512,6 @@ void calculateSalary() {
 }
 
 
-void sendNotifications() {
-    printf("[Admin] Sending notifications...\n");
-}
-
-void applyForLeave() {
-    printf("[Employee] Applying for leave...\n");
-}
-
 void viewSalary() {
     printf("[Employee] Viewing salary details...\n");
 }
@@ -544,18 +520,8 @@ void viewLeaveStatus() {
     printf("[Employee] Viewing leave status...\n");
 }
 
-void enterPreferredShifts() {
-    printf("[Employee] Entering preferred shifts...\n");
-}
-
-void viewAssignedShifts() {
-    printf("[Employee] Viewing assigned shifts...\n");
-}
 
 void checkPerformance() {
     printf("[Employee] Checking performance...\n");
 }
 
-void forgotPassword() {
-    printf("[Employee] Forgot password process...\n");
-}

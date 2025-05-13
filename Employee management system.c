@@ -4,7 +4,17 @@
 #define MAX_EMPLOYEES 10
 #define MONTHS 12
 #define FULL_WORKING_DAYS 30
-#define DAILY_WAGE 1000  // Change this as per your wage policy
+//#define DAILY_WAGE 1000  // Change this as per your wage policy
+
+#define BASE_SALARY_PER_DAY 3000
+#define OVERTIME_PER_DAY 1000
+
+int salaryRecord[MAX_EMPLOYEES][MONTHS] = {0};  // Stores monthly salary for each employee
+
+
+
+//int salaryRecords[MAX_EMPLOYEES][MONTHS] = {0}; // Monthly salaries for each employee
+
 
 int monthlyAttendance[MAX_EMPLOYEES][MONTHS] = {0};  // place this globally
 
@@ -466,8 +476,83 @@ void scheduleShifts() {
 }
 
 void calculateSalary() {
-    printf("[Admin] Calculating salary...\n");
+    int choice;
+    printf("\n[Admin] Salary Calculation System\n");
+    printf("1) Calculate Monthly Salary\n");
+    printf("2) Check Annual Salary\n");
+    printf("Enter your choice (1 or 2): ");
+    scanf("%d", &choice);
+
+    if (choice == 1) {
+        int empId, month, presentDays, overtimeDays;
+        int empIndex = -1;
+
+        printf("Enter Employee ID: ");
+        scanf("%d", &empId);
+
+        // Find employee index
+        for (int i = 0; i < MAX_EMPLOYEES; i++) {
+            if (employees[i].id == empId) {
+                empIndex = i;
+                break;
+            }
+        }
+
+        if (empIndex == -1) {
+            printf("Employee not found!\n");
+            return;
+        }
+
+        printf("Enter month (1-12): ");
+        scanf("%d", &month);
+        if (month < 1 || month > 12) {
+            printf("Invalid month!\n");
+            return;
+        }
+
+        printf("Enter number of days present: ");
+        scanf("%d", &presentDays);
+
+        printf("Enter number of overtime days: ");
+        scanf("%d", &overtimeDays);
+
+        int salary = (presentDays * BASE_SALARY_PER_DAY) + (overtimeDays * OVERTIME_PER_DAY);
+        salaryRecord[empIndex][month - 1] = salary;
+
+        printf("Salary for %s in month %d recorded: Rs. %d\n",
+               employees[empIndex].name, month, salary);
+
+    } else if (choice == 2) {
+        int empId, empIndex = -1, annualSalary = 0;
+
+        printf("Enter Employee ID to check annual salary: ");
+        scanf("%d", &empId);
+
+        for (int i = 0; i < MAX_EMPLOYEES; i++) {
+            if (employees[i].id == empId) {
+                empIndex = i;
+                break;
+            }
+        }
+
+        if (empIndex == -1) {
+            printf("Employee not found!\n");
+            return;
+        }
+
+        printf("\n--- Annual Salary Record for %s ---\n", employees[empIndex].name);
+        printf("Month\tSalary\n");
+        for (int i = 0; i < MONTHS; i++) {
+            printf("%d\tRs. %d\n", i + 1, salaryRecord[empIndex][i]);
+            annualSalary += salaryRecord[empIndex][i];
+        }
+        printf("Total Annual Salary: Rs. %d\n", annualSalary);
+
+    } else {
+        printf("Invalid choice! Please enter 1 or 2.\n");
+    }
 }
+
 
 void sendNotifications() {
     printf("[Admin] Sending notifications...\n");
@@ -500,4 +585,3 @@ void checkPerformance() {
 void forgotPassword() {
     printf("[Employee] Forgot password process...\n");
 }
-

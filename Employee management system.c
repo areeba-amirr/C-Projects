@@ -1,19 +1,17 @@
 #include <stdio.h>
 #include <string.h>
+#include <conio.h> 
 #include <stdlib.h>
-#include<conio.h>
 #define MAX_EMPLOYEES 10
 #define MONTHS 12
-#define FULL_WORKING_DAYS 30
 #define BASE_SALARY_PER_DAY 3000
 #define OVERTIME_PER_DAY 1000
 
-int salaryRecord[MAX_EMPLOYEES][MONTHS] = {0};  // Stores monthly salary for each employee
 int totalAttendance[MAX_EMPLOYEES] = {0}; // Stores total present days out of 30
-int monthlyAttendance[MAX_EMPLOYEES][MONTHS] = {0};  // place this globally
-LeaveRecord leaveRecords[MAX_EMPLOYEES]; // Track leaves for each employee
-void loadEmployeesFromFile(); //laod employees from file 
-LeaveRecord leaveRecords[MAX_EMPLOYEES]; // Track leaves for each employee
+Employee employees[MAX_EMPLOYEES];
+LeaveRecord leaveRecords[MAX_EMPLOYEES]; // Track leaves for each employee 
+int salaryRecord[MAX_EMPLOYEES][MONTHS] = {0};  // Stores monthly salary for each employee
+int monthlyAttendance[MAX_EMPLOYEES][MONTHS] = {0};  ///Stores monthly attendance for each employee
 
 // Employee structure
 struct Employee {
@@ -35,22 +33,19 @@ struct Leave {
     int month;          // 1 - 12
     int count;          // Number of leave days taken in that month
 };
-
 //structure for leavetypes
-typedef struct {
+struct LeaveRecord {
     int sickLeave[12];       // 12 months
     int emergencyLeave[12];
     int halfDayLeave[12];
     int totalLeavesYear;     // Sum of all leaves taken in the year
-} LeaveRecord;
-
+};
 //Overtime Structure
 struct Overtime {
     int empId;
     int month; // 1 to 12
     int hours; // Overtime hours for the month
 };
-
 //Salary record
 struct salaryRecord {
     int empId;
@@ -69,16 +64,13 @@ void getMaskedPassword(char *password, int maxLen);
 void loadEmployeesFromFile();
 void markAttendance();
 void manageLeaveRequests();
-void calculateSalary();void viewSalaries();
-void payrollSystem();;
+void calculateSalary();
+void viewSalary();
+void payrollSystem();
 void viewLeaveStatus(int employeeID)
 void checkPerformance(int employeeID);
-oid checkPerformance(int employeeID);
 
 
-
-//Hardcoded data
-Employee employees[MAX_EMPLOYEES];
 //int totalAttendance[MAX_EMPLOYEES] = {0}; // Stores total present days out of 30
 int main() {
     int portalChoice;
@@ -104,7 +96,7 @@ int main() {
 
             while (attempts > 0) {
                 printf("Enter your password: ");
-                scanf("%s", enteredPassword);
+                getMaskedPassword(enteredPassword, 20);
 
                 if (strcmp(enteredPassword, adminPassword) == 0) {
                     success = 1;
@@ -147,6 +139,7 @@ int main() {
 
             printf("---------------------------------------------Welcome to Employee's Portal----------------------------------------------\n");
             while (attempts > 0) {
+            	loadEmployeesFromFile();
                 printf("Enter your ID: ");
                 scanf("%d", &empId);
 int i;
@@ -156,7 +149,7 @@ int i;
                         int passAttempts = 3;
                         while (passAttempts > 0) {
                             printf("Enter your password: ");
-                            scanf("%s", empPass);
+                             getMaskedPassword(empPass, 20);
                             if (strcmp(empPass, employees[i].password) == 0) {
                                 int employeeChoice;
                 do {
@@ -226,6 +219,34 @@ int i;
 }
 
 // Function definitions 
+void getMaskedPassword(char *password, int maxLen){
+    int i = 0;
+    char ch;
+    
+    while (1) {
+        ch = getch(); // Read character without echoing
+        
+        // Enter key (end input)
+        if (ch == 13) { // ASCII 13 = Enter
+            break;
+        }
+        // Backspace
+        else if (ch == 8) { // ASCII 8 = Backspace
+            if (i > 0) {
+                i--;
+                printf("\b \b"); // Move cursor back, overwrite with space, move back again
+            }
+        }
+        // Regular character input
+        else if (i < maxLen - 1) {
+            password[i++] = ch;
+            printf("*");
+        }
+    }
+    
+    password[i] = '\0'; // Null-terminate string
+    printf("\n");
+}
 void loadEmployeesFromFile() {
     FILE *fp = fopen("Employee Record.dat", "rb");
     if (fp == NULL) {

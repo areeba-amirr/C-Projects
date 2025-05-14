@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include<conio.h>
 #define MAX_EMPLOYEES 10
 #define MONTHS 12
 #define FULL_WORKING_DAYS 30
@@ -8,18 +9,34 @@
 #define OVERTIME_PER_DAY 1000
 
 int salaryRecord[MAX_EMPLOYEES][MONTHS] = {0};  // Stores monthly salary for each employee
-
+int totalAttendance[MAX_EMPLOYEES] = {0}; // Stores total present days out of 30
 int monthlyAttendance[MAX_EMPLOYEES][MONTHS] = {0};  // place this globally
+LeaveRecord leaveRecords[MAX_EMPLOYEES]; // Track leaves for each employee
+void loadEmployeesFromFile(); //laod employees from file 
+LeaveRecord leaveRecords[MAX_EMPLOYEES]; // Track leaves for each employee
 
 // Employee structure
-typedef struct {
+struct Employee {
     int id;
     char name[50];
     char email[100];
     char password[20];
-} Employee;
+};
+//structure to store Attendace
+struct attendance{
+	int empId;
+	int month;
+	int presentDays;
+};
+//structure to store leave
+struct Leave {
+    int employeeID;
+    char leaveType[20]; // e.g., "Annual" or "Sick"
+    int month;          // 1 - 12
+    int count;          // Number of leave days taken in that month
+};
 
-int totalAttendance[MAX_EMPLOYEES] = {0}; // Stores total present days out of 30
+//structure for leavetypes
 typedef struct {
     int sickLeave[12];       // 12 months
     int emergencyLeave[12];
@@ -27,47 +44,49 @@ typedef struct {
     int totalLeavesYear;     // Sum of all leaves taken in the year
 } LeaveRecord;
 
-LeaveRecord leaveRecords[MAX_EMPLOYEES]; // Track leaves for each employee
+//Overtime Structure
+struct Overtime {
+    int empId;
+    int month; // 1 to 12
+    int hours; // Overtime hours for the month
+};
+
+//Salary record
+struct salaryRecord {
+    int empId;
+    int month;
+    int year;
+    int salary;
+};
+//salaries(in enmployee menu)
+struct Salary {
+    int id;
+    float monthlySalary;
+};
 
 // Function prototypes
-
+void getMaskedPassword(char *password, int maxLen);
+void loadEmployeesFromFile();
 void markAttendance();
 void manageLeaveRequests();
-void calculateSalary();
-void viewSalary();
-void viewLeaveStatus();
-void checkPerformance();
+void calculateSalary();void viewSalaries();
+void payrollSystem();;
+void viewLeaveStatus(int employeeID)
+void checkPerformance(int employeeID);
+oid checkPerformance(int employeeID);
+
 
 
 //Hardcoded data
-Employee employees[MAX_EMPLOYEES] = {
-    {112, "Areeba", "areebaamir826@gmail.com", "345"},
-    {113, "Ali", "ali@gmail.com", "123"},
-    {114, "Sara", "sara@gmail.com", "abc"},
-    {115, "Ahmed", "ahmed@gmail.com", "789"},
-    {116, "Fatima", "fatima@gmail.com", "fat123"},
-    {117, "Usman", "usman@gmail.com", "usm456"},
-    {118, "Zara", "zara@gmail.com", "zara999"},
-    {119, "Bilal", "bilal@gmail.com", "bil321"},
-    {120, "Hira", "hira@gmail.com", "hira88"},
-//    {121, "Imran", "imran@gmail.com", "imran007"},
-//    {122, "Asma", "asma@gmail.com", "asma123"},
-//    {123, "Kamran", "kamran@gmail.com", "kam999"},
-//    {124, "Nida", "nida@gmail.com", "nid234"},
-//    {125, "Tariq", "tariq@gmail.com", "tar987"},
-//    {126, "Hassan", "hassan@gmail.com", "has000"},
-//    {127, "Rabia", "rabia@gmail.com", "rab321"},
-//    {128, "Saad", "saad@gmail.com", "saad321"},
-//    {129, "Aiman", "aiman@gmail.com", "aim987"},
-//    {130, "Fahad", "fahad@gmail.com", "fah111"},
-//    {131, "Lubna", "lubna@gmail.com", "lub123"}
-};
+Employee employees[MAX_EMPLOYEES];
 //int totalAttendance[MAX_EMPLOYEES] = {0}; // Stores total present days out of 30
 int main() {
     int portalChoice;
 
     do {
-        printf("\n--------------------EMPLOYEE MANAGEMENT SYSTEM-------------------------\n");
+        printf("************************************************************************************************************************");
+        printf("\n                                             EMPLOYEE MANAGEMENT SYSTEM\n");
+        printf("************************************************************************************************************************\n");
         printf("1) Admin Menu\n");
         printf("2) Employee Menu\n");
         printf("3) Payroll System\n");
@@ -81,7 +100,7 @@ int main() {
             char enteredPassword[20];
             int attempts = 3, success = 0;
 
-            printf("---Welcome to Admin's Portal-----\n");
+             printf("------------------------------------------------Welcome to Admin's Portal----------------------------------------------\n");
 
             while (attempts > 0) {
                 printf("Enter your password: ");
@@ -102,7 +121,7 @@ int main() {
              if (success) {
                 int adminChoice;
                 do {
-                    printf("\n---Admin Menu---\n");
+                    printf("\n---------------Admin Menu----------------\n");
                     printf("1) Mark Attendance\n");
                     printf("2) Manage Leave Requests\n");
                     printf("3) Calculate Salary\n");
@@ -126,7 +145,7 @@ int main() {
             int attempts = 3;
             int found = 0;
 
-            printf("---Welcome to Employee's Portal-----\n");
+            printf("---------------------------------------------Welcome to Employee's Portal----------------------------------------------\n");
             while (attempts > 0) {
                 printf("Enter your ID: ");
                 scanf("%d", &empId);
@@ -141,7 +160,7 @@ int i;
                             if (strcmp(empPass, employees[i].password) == 0) {
                                 int employeeChoice;
                 do {
-                    printf("\n---Employee Menu---\n");
+                    printf("\n------------Employee Menu-----------\n");
                     printf("1) View Salary\n");
                     printf("2) View Leave Status\n");
                     printf("3) Check Performance\n");
@@ -192,7 +211,7 @@ int i;
         }
 
         else if (portalChoice == 3) {
-            printf("Payroll system module.\n");
+            payrollsystem();
         } 
         else if (portalChoice == 4) {
             printf("Exiting the program.\n");
@@ -207,7 +226,21 @@ int i;
 }
 
 // Function definitions 
+void loadEmployeesFromFile() {
+    FILE *fp = fopen("Employee Record.dat", "rb");
+    if (fp == NULL) {
+        printf("Failed to open Employee Record.dat\n");
+        return;
+    }
 
+    int employeeCount = 0;
+    while (fread(&employees[employeeCount], sizeof(struct Employee), 1, fp) == 1) {
+        employeeCount++;
+        if (employeeCount >= MAX_EMPLOYEES) break;
+    }
+
+    fclose(fp);
+}
 void markAttendance() {
     const char* monthNames[MONTHS] = {
         "January", "February", "March", "April", "May", "June",

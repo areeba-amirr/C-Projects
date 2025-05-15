@@ -262,14 +262,16 @@ void loadEmployeesFromFile() {
 
     fclose(fp);
 }
+// Mark Attendence  with file handling 
 void markAttendance() {
+    // List of month names to display in the menu
     const char* monthNames[MONTHS] = {
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     };
-
+// Total working days in each month 
     const int monthWorkingDays[MONTHS] = {
-        31, 28, 31, 30, 31, 30, 
+        31, 29, 31, 30, 31, 30, 
         31, 31, 30, 31, 30, 31
     };
 
@@ -296,7 +298,7 @@ void markAttendance() {
         }
 
         int maxDays = monthWorkingDays[monthChoice - 1];
-
+        loadEmployeesFromFile();
         while (1) {
             int empId;
             printf("\nEnter Employee ID to mark attendance for this month:\n");
@@ -333,8 +335,20 @@ void markAttendance() {
                         printf("Invalid input. Attendance not recorded.\n");
                     } else {
                         monthlyAttendance[i][monthChoice - 1] = presentDays;
-                        printf("Attendance recorded for %s: %d/%d days.\n", 
-                               employees[i].name, presentDays, maxDays);
+                                         struct attendance att;
+                        att.empId = empId;
+                        att.month = monthChoice;
+                        att.presentDays = presentDays;
+                        // Save attendance data to the file for record keeping
+                        FILE *afp = fopen("Attendance Record.dat", "ab");
+                        if (afp == NULL) {
+                            printf("Failed to open Attendance Record.dat\n");
+                        } else {
+                            fwrite(&att, sizeof(struct attendance), 1, afp);
+                            fclose(afp);
+                            printf("Attendance recorded for %s: %d/%d days (Saved to file).\n", 
+                                   employees[i].name, presentDays, maxDays);
+                        }
                     }
                     break;
                 }
@@ -346,7 +360,6 @@ void markAttendance() {
         }
     }
 }
-
 // leave management system with file handling !!
 void manageLeaveRequests() {
 

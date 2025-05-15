@@ -8,7 +8,7 @@
 #define OVERTIME_PER_DAY 1000
 
 int totalAttendance[MAX_EMPLOYEES] = {0}; // Stores total present days out of 30
-Employee employees[MAX_EMPLOYEES];
+Employee employees[MAX_EMPLOYEES]; // Track Data for each employee 
 LeaveRecord leaveRecords[MAX_EMPLOYEES]; // Track leaves for each employee 
 int salaryRecord[MAX_EMPLOYEES][MONTHS] = {0};  // Stores monthly salary for each employee
 int monthlyAttendance[MAX_EMPLOYEES][MONTHS] = {0};  ///Stores monthly attendance for each employee

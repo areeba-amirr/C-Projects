@@ -346,8 +346,10 @@ void markAttendance() {
         }
     }
 }
+
+// leave management system with file handling !!
 void manageLeaveRequests() {
-	
+
     int empId, month, leaveCount, leaveType;
     int mainExit = 0;
 
@@ -369,7 +371,7 @@ if(choice<0 || choice>2){
             printf("Exiting leave management...\n");
             break;
         }
-
+        loadEmployeesFromFile();
         printf("\nEnter Employee ID: ");
         scanf("%d", &empId);
 
@@ -438,7 +440,41 @@ if (leaveRecords[empIndex].sickLeave[month - 1] != 0 ||
                     printf("Leave type limit exceeded! Only 1 of each type allowed per month.\n");
                     continue;
                 }
+                FILE *lfp = fopen("Leave.dat", "ab");  // open in append mode
+if (lfp == NULL) {
+    printf("Error opening Leave.dat for writing.\n");
+} else {
+    struct Leave leave;
 
+    // Save sick leave (if any)
+    if (monthlySick > 0) {
+        strcpy(leave.leaveType, "Sick");
+        leave.employeeID = empId;
+        leave.month = month;
+        leave.count = 1;
+        fwrite(&leave, sizeof(struct Leave), 1, lfp);
+    }
+
+    // Save emergency leave (if any)
+    if (monthlyEmergency > 0) {
+        strcpy(leave.leaveType, "Emergency");
+        leave.employeeID = empId;
+        leave.month = month;
+        leave.count = 1;
+        fwrite(&leave, sizeof(struct Leave), 1, lfp);
+    }
+
+    // Save half-day leave (if any)
+    if (monthlyHalf > 0) {
+        strcpy(leave.leaveType, "Half Day");
+        leave.employeeID = empId;
+        leave.month = month;
+        leave.count = 1;
+        fwrite(&leave, sizeof(struct Leave), 1, lfp);
+    }
+
+    fclose(lfp);
+}
                 int totalForMonth = monthlySick + monthlyEmergency + monthlyHalf;
                 int annualSoFar = leaveRecords[empIndex].totalLeavesYear;
 

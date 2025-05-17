@@ -68,7 +68,6 @@ void enterOvertime();
 void calculateSalary();
 void viewSalary(int employeeID);
 void payrollSystem();
-void viewLeaveStatus(int employeeID)
 void viewLeaveStatus(int employeeID);
 void checkPerformance(int employeeID);
 void payrollSystem();
@@ -702,7 +701,38 @@ void enterOvertime() {
     fclose(fp);
 }
 void viewSalary(int employeeID) {
-    printf("[Employee] Viewing salary details...\n");
+    FILE *file = fopen("salaries.dat", "rb");
+    if (file == NULL) {
+        printf("Error: Could not open salaries.dat\n");
+        return;
+    }
+
+    struct Salary {
+        int id;
+        float monthlySalary;
+    } sal;
+
+    int recordCount = 0, found = 0;
+
+    printf("\n--- Reading salaries.dat ---\n");
+    while (fread(&sal, sizeof(sal), 1, file)) {
+        printf("Read record: ID = %d, Monthly Salary = %.2f\n", sal.id, sal.monthlySalary);
+        if (sal.id == employeeID) {
+            printf("\n--- Salary Details ---\n");
+            printf("Employee ID     : %d\n", sal.id);
+            printf("Monthly Salary  : Rs. %.2f\n", sal.monthlySalary);
+            printf("Annual Salary   : Rs. %.2f\n", sal.monthlySalary * 12);
+            found = 1;
+            break;
+        }
+        recordCount++;
+    }
+
+    fclose(file);
+
+    if (!found) {
+        printf("No salary record found for Employee ID: %d\n", employeeID);
+    }
 }
 
 void viewLeaveStatus() {

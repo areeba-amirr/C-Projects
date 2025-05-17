@@ -64,11 +64,12 @@ void getMaskedPassword(char *password, int maxLen);
 void loadEmployeesFromFile();
 void markAttendance();
 void manageLeaveRequests();
+void enterOvertime();
 void calculateSalary();
-void viewSalary();
-void payrollSystem();
-void viewLeaveStatus(int employeeID)
+void viewSalary(int employeeID);
+void viewLeaveStatus(int employeeID);
 void checkPerformance(int employeeID);
+void payrollSystem();
 
 
 //int totalAttendance[MAX_EMPLOYEES] = {0}; // Stores total present days out of 30
@@ -614,8 +615,69 @@ void calculateSalary() {
     }
 }
 
+void enterOvertime() {
+    loadEmployeesFromFile();
 
-void viewSalary() {
+    FILE *fp = fopen("overtime.dat", "ab");  // Open in append mode
+    if (fp == NULL) {
+        printf("Error: Could not open overtime.dat for writing.\n");
+        return;
+    }
+
+    printf("\n--- Enter Overtime Hours for Employees ---\n");
+
+    char moreEmployees = 'Y';
+    while (moreEmployees == 'Y' || moreEmployees == 'y') {
+        int empId, empIndex = -1;
+
+        printf("\nEnter Employee ID: ");
+        scanf("%d", &empId);
+
+        // Find employee
+        for (int i = 0; i < MAX_EMPLOYEES; i++) {
+            if (employees[i].id == empId) {
+                empIndex = i;
+                break;
+            }
+        }
+
+        if (empIndex == -1) {
+            printf("Employee with ID %d not found!\n", empId);
+        } else {
+            printf("Entering overtime for %s (ID: %d)\n", employees[empIndex].name, empId);
+            while (1) {
+                int month;
+                printf("\nEnter Month (1–12) to add overtime (0 to stop for this employee): ");
+                scanf("%d", &month);
+
+                if (month == 0) break;
+
+                if (month < 1 || month > 12) {
+                    printf("Invalid month. Try again.\n");
+                    continue;
+                }
+
+                struct Overtime ot;
+                ot.empId = empId;
+                ot.month = month;
+
+                printf("Enter overtime hours for month %d: ", month);
+                scanf("%d", &ot.hours);
+
+                if (ot.hours < 0) ot.hours = 0;
+
+                fwrite(&ot, sizeof(struct Overtime), 1, fp);
+                printf("Overtime saved for Month %d.\n", month);
+            }
+        }
+
+        printf("\nDo you want to enter overtime for another employee? (Y/N): ");
+        scanf(" %c", &moreEmployees);
+    }
+
+    fclose(fp);
+}
+void viewSalary(int employeeID) {
     printf("[Employee] Viewing salary details...\n");
 }
 

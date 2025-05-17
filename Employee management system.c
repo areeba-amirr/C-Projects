@@ -67,6 +67,7 @@ void manageLeaveRequests();
 void enterOvertime();
 void calculateSalary();
 void viewSalary(int employeeID);
+void payrollSystem();
 void viewLeaveStatus(int employeeID);
 void checkPerformance(int employeeID);
 void payrollSystem();
@@ -538,81 +539,103 @@ if (lfp == NULL) {
 }
 
 void calculateSalary() {
-    int choice;
-    printf("\n[Admin] Salary Calculation System\n");
-    printf("1) Calculate Monthly Salary\n");
-    printf("2) Check Annual Salary\n");
-    printf("Enter your choice (1 or 2): ");
-    scanf("%d", &choice);
+    loadEmployeesFromFile();
 
-    if (choice == 1) {
-        int empId, month, presentDays, overtimeDays;
-        int empIndex = -1;
+    FILE *attFile = fopen("Attendance Record.dat", "rb");
+    FILE *otFile = fopen("overtime.dat", "rb");
+    FILE *leaveFile = fopen("Leave.dat", "rb");
+    FILE *salaryFile = fopen("salaries.dat", "wb");
 
-        printf("Enter Employee ID: ");
-        scanf("%d", &empId);
-
-        // Find employee index
-        for (int i = 0; i < MAX_EMPLOYEES; i++) {
-            if (employees[i].id == empId) {
-                empIndex = i;
-                break;
-            }
-        }
-
-        if (empIndex == -1) {
-            printf("Employee not found!\n");
-            return;
-        }
-
-        printf("Enter month (1-12): ");
-        scanf("%d", &month);
-        if (month < 1 || month > 12) {
-            printf("Invalid month!\n");
-            return;
-        }
-
-        printf("Enter number of days present: ");
-        scanf("%d", &presentDays);
-
-        printf("Enter number of overtime days: ");
-        scanf("%d", &overtimeDays);
-
-        int salary = (presentDays * BASE_SALARY_PER_DAY) + (overtimeDays * OVERTIME_PER_DAY);
-        salaryRecord[empIndex][month - 1] = salary;
-
-        printf("Salary for %s in month %d recorded: Rs. %d\n",
-               employees[empIndex].name, month, salary);
-
-    } else if (choice == 2) {
-        int empId, empIndex = -1, annualSalary = 0;
-
-        printf("Enter Employee ID to check annual salary: ");
-        scanf("%d", &empId);
-
-        for (int i = 0; i < MAX_EMPLOYEES; i++) {
-            if (employees[i].id == empId) {
-                empIndex = i;
-                break;
-            }
-        }
-
-        if (empIndex == -1) {
-            printf("Employee not found!\n");
-            return;
-        }
-
-        printf("\n--- Annual Salary Record for %s ---\n", employees[empIndex].name);
-        printf("Month\tSalary\n");
-        for (int i = 0; i < MONTHS; i++) {
-            printf("%d\tRs. %d\n", i + 1, salaryRecord[empIndex][i]);
-            annualSalary += salaryRecord[empIndex][i];
-        }
-        printf("Total Annual Salary: Rs. %d\n", annualSalary);
-
-    } else {
-        printf("Invalid choice! Please enter 1 or 2.\n");
+    if (!attFile || !otFile || !leaveFile || !salaryFile) {
+        printf("Error opening one or more required files.\n");
+        if (attFile) fclose(attFile);
+        if (otFile) fclose(otFile);
+        if (leaveFile) fclose(leaveFile);
+        if (salaryFile) fclose(salaryFile);
+        return;
     }
+
+    struct attendance att;
+    struct Overtime ot;
+    struct Leave leave;
+    struct Salary sal;
+
+    int salaries[MAX_EMPLOYEES][MONTHS] = {0};
+    int overtimeHours[MAX_EMPLOYEES][MONTHS] = {0};
+    int leaveCount[MAX_EMPLOYEES][MONTHS] = {0};
+
+    // Step 1: Load attendance
+    while (fread(&att, sizeof(struct attendance), 1, attFile)) {
+        for (int i = 0; i < MAX_EMPLOYEES; i++) {
+            if (employees[i].id == att.empId && att.month >= 1 && att.month <= 12) {
+                salaries[i][att.month - 1] = att.presentDays * BASE_SALARY_PER_DAY;
+                break;
+            }
+        }
+    }
+    fclose(attFile);
+
+    // Step 2: Load overtime
+    while (fread(&ot, sizeof(struct Overtime), 1, otFile)) {
+        for (int i = 0; i < MAX_EMPLOYEES; i++) {
+            if (employees[i].id == ot.empId && ot.month >= 1 && ot.month <= 12) {
+                overtimeHours[i][ot.month - 1] += ot.hours;
+                break;
+            }
+        }
+    }
+    fclose(otFile);
+
+    // Step 3: Load all types of leave and count
+    while (fread(&leave, sizeof(struct Leave), 1, leaveFile)) {
+        for (int i = 0; i < MAX_EMPLOYEES; i++) {
+            if (employees[i].id == leave.employeeID && leave.month >= 1 && leave.month <= 12) {
+                leaveCount[i][leave.month - 1] += leave.count;
+                break;
+            }
+        }
+    }
+    fclose(leaveFile);
+
+    // Step 4: Final Salary Calculation
+    printf("\n--- Final Salary Report (Attendance + Overtime - All Leaves) ---\n");
+    for (int i = 0; i < MAX_EMPLOYEES; i++) {
+        int totalYearly = 0;
+        int totalMonths = 0;
+
+        for (int m = 0; m < MONTHS; m++) {
+            if (salaries[i][m] > 0) {
+                int base = salaries[i][m];
+                int otBonus = overtimeHours[i][m] * 200;
+                int leavePenalty = leaveCount[i][m] * 1000;
+
+                int finalSalary = base + otBonus - leavePenalty;
+                if (finalSalary < 0) finalSalary = 0;
+
+                salaries[i][m] = finalSalary;
+                totalYearly += finalSalary;
+                totalMonths++;
+            }
+        }
+
+        if (totalMonths > 0) {
+            sal.id = employees[i].id;
+            sal.monthlySalary = (float)totalYearly / totalMonths;
+            fwrite(&sal, sizeof(struct Salary), 1, salaryFile);
+
+            // Display
+            printf("\nEmployee: %s (ID: %d)\n", employees[i].name, employees[i].id);
+            for (int m = 0; m < MONTHS; m++) {
+                if (salaries[i][m] > 0) {
+                    printf("  Month %2d: Rs. %d\n", m + 1, salaries[i][m]);
+                }
+            }
+            printf("  Yearly Salary: Rs. %d\n", totalYearly);
+            printf("--------------------------------------------------\n");
+        }
+    }
+
+    fclose(salaryFile);
 }
 
 void enterOvertime() {
@@ -678,11 +701,66 @@ void enterOvertime() {
     fclose(fp);
 }
 void viewSalary(int employeeID) {
-    printf("[Employee] Viewing salary details...\n");
+    FILE *file = fopen("salaries.dat", "rb");
+    if (file == NULL) {
+        printf("Error: Could not open salaries.dat\n");
+        return;
+    }
+
+    struct Salary {
+        int id;
+        float monthlySalary;
+    } sal;
+
+    int recordCount = 0, found = 0;
+
+    printf("\n--- Reading salaries.dat ---\n");
+    while (fread(&sal, sizeof(sal), 1, file)) {
+        printf("Read record: ID = %d, Monthly Salary = %.2f\n", sal.id, sal.monthlySalary);
+        if (sal.id == employeeID) {
+            printf("\n--- Salary Details ---\n");
+            printf("Employee ID     : %d\n", sal.id);
+            printf("Monthly Salary  : Rs. %.2f\n", sal.monthlySalary);
+            printf("Annual Salary   : Rs. %.2f\n", sal.monthlySalary * 12);
+            found = 1;
+            break;
+        }
+        recordCount++;
+    }
+
+    fclose(file);
+
+    if (!found) {
+        printf("No salary record found for Employee ID: %d\n", employeeID);
+    }
 }
 
-void viewLeaveStatus() {
-    printf("[Employee] Viewing leave status...\n");
+void viewLeaveStatus(int employeeID) {
+    FILE *lfp = fopen("Leave.dat", "rb");
+    if (lfp == NULL) {
+        printf("No leave records found (file missing)!\n");
+        return;
+    }
+
+    struct Leave leave;
+    int leaveFound = 0;
+
+    printf("\n--- Leave Details for Employee ID: %d ---\n", employeeID);
+    printf("Month\tLeave Type\tCount\n");
+    printf("-----\t----------\t-----\n");
+
+    while (fread(&leave, sizeof(struct Leave), 1, lfp)) {
+        if (leave.employeeID == employeeID) {
+            leaveFound = 1;
+            printf("%2d\t%-10s\t%d\n", leave.month, leave.leaveType, leave.count);
+        }
+    }
+
+    fclose(lfp);
+
+    if (!leaveFound) {
+        printf("No leave records found for your ID.\n");
+    }
 }
 
 

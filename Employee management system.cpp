@@ -796,21 +796,25 @@ void payrollSystem() {
 
     FILE *salaryFile = fopen("salaries.dat", "rb");
     FILE *otFile = fopen("overtime.dat", "rb");
+    FILE *leaveFile = fopen("Leave.dat", "rb");
+
     struct Salary sal;
     struct Overtime ot;
+    struct Leave lv;
 
-    if (!salaryFile || !otFile) {
+    if (!salaryFile || !otFile || !leaveFile) {
         printf("Could not open required files.\n");
         if (salaryFile) fclose(salaryFile);
         if (otFile) fclose(otFile);
+        if (leaveFile) fclose(leaveFile);
         return;
     }
 
-    // Step 1: Calculate total overtime per employee
     int overtimeTotal[MAX_EMPLOYEES] = {0};
+    int leaveTotal[MAX_EMPLOYEES] = {0};
 
     while (fread(&ot, sizeof(struct Overtime), 1, otFile)) {
-        for ( i = 0; i < MAX_EMPLOYEES; i++) {
+        for (int i = 0; i < MAX_EMPLOYEES; i++) {
             if (employees[i].id == ot.empId) {
                 overtimeTotal[i] += ot.hours;
                 break;
@@ -819,15 +823,26 @@ void payrollSystem() {
     }
     fclose(otFile);
 
-    // Step 2: Prepare to display monthly and annual salary
+    while (fread(&lv, sizeof(struct Leave), 1, leaveFile)) {
+        for (int i = 0; i < MAX_EMPLOYEES; i++) {
+            if (employees[i].id == lv.employeeID) {
+                leaveTotal[i] += lv.count;
+                break;
+            }
+        }
+    }
+    fclose(leaveFile);
+
     int monthlySalaries[MAX_EMPLOYEES][MONTHS] = {0};
     int yearlySalary[MAX_EMPLOYEES] = {0};
+    int companyAnnualSalary = 0;
 
     while (fread(&sal, sizeof(struct Salary), 1, salaryFile)) {
-        for ( i = 0; i < MAX_EMPLOYEES; i++) {
+        for (int i = 0; i < MAX_EMPLOYEES; i++) {
             if (employees[i].id == sal.id) {
                 if (sal.month == 0) {
-                    yearlySalary[i] = sal.salary;  // annual salary
+                    yearlySalary[i] = sal.salary;
+                    companyAnnualSalary += sal.salary;
                 } else if (sal.month >= 1 && sal.month <= 12) {
                     monthlySalaries[i][sal.month - 1] = sal.salary;
                 }
@@ -837,28 +852,30 @@ void payrollSystem() {
     }
     fclose(salaryFile);
 
-    // Step 3: Display Report
-    printf("\n========================================================================= Annual Payroll Report ============================================================\n\n");
-    printf("ID   Name             Overtime(Hrs)                               Monthly Salaries (Jan-Dec)                                               Annual Salary\n");
-    printf("------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+    // Display payroll table
+    printf("\n====================================================== ANNUAL PAYROLL REPORT ======================================================\n\n");
+    printf("%-14s %-4s %-12s %-10s", "Name", "ID", "Overtime(Hrs)", "Leaves");
 
-    for ( i = 0; i < MAX_EMPLOYEES; i++) {
-        if (employees[i].id == 0) continue; // Skip unused slots
+    for (int m = 0; m < MONTHS; m++) {
+        printf(" M%02d ", m + 1);
+    }
+    printf(" Annual Salary\n");
+    printf("----------------------------------------------------------------------------------------------------------------------------\n");
 
-        printf("%-4d %-18s %-14d ", employees[i].id, employees[i].name, overtimeTotal[i]);
+    for (int i = 0; i < MAX_EMPLOYEES; i++) {
+        if (employees[i].id == 0) continue;
 
-        for  (m = 0; m < MONTHS; m++) {
-            printf("%6d ", monthlySalaries[i][m]);
+        printf("%-14s %-4d %-12d %-10d", employees[i].name, employees[i].id, overtimeTotal[i], leaveTotal[i]);
+        for (int m = 0; m < MONTHS; m++) {
+            printf(" %5d", monthlySalaries[i][m]);
         }
-
-        printf("                  Rs. %d\n", yearlySalary[i]);
+        printf("     Rs. %d\n", yearlySalary[i]);
     }
 
-    printf("------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
-    printf("\n");
+    printf("----------------------------------------------------------------------------------------------------------------------------\n");
+    printf("TOTAL COMPANY ANNUAL SALARY: Rs. %d\n", companyAnnualSalary);
+    printf("============================================================================================================================\n");
 }
-
-
 void checkPerformance(int employeeID) {
     FILE *afp = fopen("Attendance Record.dat", "rb");
     FILE *ofp = fopen("overtime.dat", "rb");

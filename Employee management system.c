@@ -5,13 +5,7 @@
 #define MAX_EMPLOYEES 10
 #define MONTHS 12
 #define BASE_SALARY_PER_DAY 3000
-#define OVERTIME_PER_DAY 1000
 
-int totalAttendance[MAX_EMPLOYEES] = {0}; // Stores total present days out of 30
-Employee employees[MAX_EMPLOYEES]; // Track Data for each employee 
-LeaveRecord leaveRecords[MAX_EMPLOYEES]; // Track leaves for each employee 
-int salaryRecord[MAX_EMPLOYEES][MONTHS] = {0};  // Stores monthly salary for each employee
-int monthlyAttendance[MAX_EMPLOYEES][MONTHS] = {0};  ///Stores monthly attendance for each employee
 
 // Employee structure
 struct Employee {
@@ -55,10 +49,19 @@ struct salaryRecord {
 };
 //salaries(in enmployee menu)
 struct Salary {
-    int id;
+	int id;
+    int month;
+    int salary;
     float monthlySalary;
 };
 
+
+int totalAttendance[MAX_EMPLOYEES] = {0}; // Stores total present days out of 30
+struct Employee employees[MAX_EMPLOYEES]; // Track Data for each employee 
+struct LeaveRecord leaveRecords[MAX_EMPLOYEES]; // Track leaves for each employee 
+int salaryRecord[MAX_EMPLOYEES][MONTHS] = {0};  // Stores monthly salary for each employee
+int monthlyAttendance[MAX_EMPLOYEES][MONTHS] = {0};  ///Stores monthly attendance for each employee
+int i,m;
 // Function prototypes
 void getMaskedPassword(char *password, int maxLen);
 void loadEmployeesFromFile();
@@ -75,12 +78,12 @@ void payrollSystem();
 
 //int totalAttendance[MAX_EMPLOYEES] = {0}; // Stores total present days out of 30
 int main() {
-    int portalChoice;
+  int portalChoice;
 
     do {
-        printf("************************************************************************************************************************");
-        printf("\n                                             EMPLOYEE MANAGEMENT SYSTEM\n");
-        printf("************************************************************************************************************************\n");
+    	printf("************************************************************************************************************************************************************");
+        printf("\n                                                             EMPLOYEE MANAGEMENT SYSTEM\n");
+        printf("************************************************************************************************************************************************************\n");
         printf("1) Admin Menu\n");
         printf("2) Employee Menu\n");
         printf("3) Payroll System\n");
@@ -90,15 +93,15 @@ int main() {
 
         if (portalChoice == 1) {
 
-            char adminPassword[] = "admin123";
+            char adminPassword[] = "admin123"; //hardcoded admin password
             char enteredPassword[20];
             int attempts = 3, success = 0;
 
-             printf("------------------------------------------------Welcome to Admin's Portal----------------------------------------------\n");
+            printf("------------------------------------------------Welcome to Admin's Portal----------------------------------------------\n");
 
             while (attempts > 0) {
                 printf("Enter your password: ");
-                getMaskedPassword(enteredPassword, 20);
+                 getMaskedPassword(enteredPassword, 20);
 
                 if (strcmp(enteredPassword, adminPassword) == 0) {
                     success = 1;
@@ -115,63 +118,65 @@ int main() {
              if (success) {
                 int adminChoice;
                 do {
-                    printf("\n---------------Admin Menu----------------\n");
+                   printf("\n---------------Admin Menu----------------\n");
                     printf("1) Mark Attendance\n");
                     printf("2) Manage Leave Requests\n");
-                    printf("3) Calculate Salary\n");
-                    printf("4) Logout\n");
-                    printf("Enter your choice (1-4): ");
+                     printf("3) Enter Overtime \n");
+                     printf("4) Calculate Salary\n");
+                    printf("5) Logout\n");
+                    printf("Enter your choice (1-5): ");
                     scanf("%d", &adminChoice);
 
                     switch (adminChoice) {
                         case 1: markAttendance(); break;
                         case 2: manageLeaveRequests(); break;
-                        case 3: calculateSalary(); break;
-                        case 4: printf("Logging out...\n"); break;
+                        case 3: enterOvertime(); break;
+                        case 4: calculateSalary(); break;
+                        case 5: printf("Logging out...\n"); break;
                         default: printf("Invalid choice!\n"); break;
                     }
-                } while (adminChoice != 4);
+                } while (adminChoice != 5);
             }
         }
-        else if (portalChoice == 2) {
+       else if (portalChoice == 2) {
             int empId;
             char empPass[20];
             int attempts = 3;
-            int found = 0;
+            int found =0;
 
             printf("---------------------------------------------Welcome to Employee's Portal----------------------------------------------\n");
             while (attempts > 0) {
             	loadEmployeesFromFile();
                 printf("Enter your ID: ");
                 scanf("%d", &empId);
-int i;
+            int i;
                 for ( i = 0; i < MAX_EMPLOYEES; i++) {
                     if (employees[i].id == empId) {
                         found = 1;
                         int passAttempts = 3;
                         while (passAttempts > 0) {
                             printf("Enter your password: ");
-                             getMaskedPassword(empPass, 20);
-                            if (strcmp(empPass, employees[i].password) == 0) {
+                           getMaskedPassword(empPass, 20);
+                            if (strcmp(empPass, employees[i].password) == 0) { //using stringcompare function to campare passwords
                                 int employeeChoice;
                 do {
-                    printf("\n------------Employee Menu-----------\n");
+                    printf("\n---Employee Menu---\n");
                     printf("1) View Salary\n");
                     printf("2) View Leave Status\n");
                     printf("3) Check Performance\n");
                     printf("4) Logout\n");
                     printf("Enter your choice (1-4): ");
                     scanf("%d", &employeeChoice);
-
+//                    int employeeID = employees[i].id; 
                     switch (employeeChoice) {
                         case 1:
-                           viewSalary();
+                           viewSalary(empId);
                             break;
                         case 2:
-                            viewLeaveStatus();
+                            viewLeaveStatus(empId);
                             break;
                         case 3:
-                            checkPerformance();
+                            checkPerformance(empId);
                             break;
                         case 4:
                            printf("Logging out...\n");
@@ -206,7 +211,7 @@ int i;
         }
 
         else if (portalChoice == 3) {
-            payrollsystem();
+            payrollSystem();
         } 
         else if (portalChoice == 4) {
             printf("Exiting the program.\n");
@@ -219,7 +224,6 @@ int i;
 
     return 0;
 }
-
 // Function definitions 
 void getMaskedPassword(char *password, int maxLen){
     int i = 0;
@@ -283,7 +287,8 @@ void markAttendance() {
 
     while (1) {
         printf("\n--- Select Month to Mark Attendance ---\n");
-        for (int i = 0; i < MONTHS; i++) {
+        int i;
+        for ( i = 0; i < MONTHS; i++) {
             printf("%d) %s\n", i + 1, monthNames[i]);
         }
         printf("0) Exit to Admin Menu\n");
@@ -317,7 +322,8 @@ void markAttendance() {
             }
 
             int found = 0;
-            for (int i = 0; i < MAX_EMPLOYEES; i++) {
+            int i;
+            for (i = 0; i < MAX_EMPLOYEES; i++) {
                 if (employees[i].id == empId) {
                     found = 1;
 
@@ -391,7 +397,8 @@ if(choice<0 || choice>2){
         scanf("%d", &empId);
 
         int empIndex = -1;
-        for (int i = 0; i < MAX_EMPLOYEES; i++) {
+        int i;
+        for (i = 0; i < MAX_EMPLOYEES; i++) {
             if (employees[i].id == empId) {
                 empIndex = i;
                 break;
@@ -435,8 +442,8 @@ if (leaveRecords[empIndex].sickLeave[month - 1] != 0 ||
                 }
 
                 int monthlySick = 0, monthlyEmergency = 0, monthlyHalf = 0;
-
-                for (int i = 0; i < leaveCount; i++) {
+int i;
+                for (i = 0; i < leaveCount; i++) {
                     printf("\nEnter type of leave #%d:\n", i + 1);
                     printf("1. Sick Leave\n2. Emergency Leave\n3. Half Day\nEnter choice: ");
                     scanf("%d", &leaveType);
@@ -518,7 +525,8 @@ if (lfp == NULL) {
             // ---------- Annual Summary ----------
             printf("\n Annual Leave Summary for %s (ID: %d):\n", employees[empIndex].name, employees[empIndex].id);
             printf("Month\tSick\tEmergency\tHalf Day\n");
-            for (int m = 0; m < 12; m++) {
+            int m;
+            for (m = 0; m < 12; m++) {
                 printf("%d\t%d\t%d\t\t%d\n", m + 1,
                        leaveRecords[empIndex].sickLeave[m],
                        leaveRecords[empIndex].emergencyLeave[m],
@@ -566,7 +574,8 @@ void calculateSalary() {
 
     // Step 1: Load attendance
     while (fread(&att, sizeof(struct attendance), 1, attFile)) {
-        for (int i = 0; i < MAX_EMPLOYEES; i++) {
+    	int i;
+        for (i = 0; i < MAX_EMPLOYEES; i++) {
             if (employees[i].id == att.empId && att.month >= 1 && att.month <= 12) {
                 salaries[i][att.month - 1] = att.presentDays * BASE_SALARY_PER_DAY;
                 break;
@@ -577,9 +586,9 @@ void calculateSalary() {
 
     // Step 2: Load overtime
     while (fread(&ot, sizeof(struct Overtime), 1, otFile)) {
-        for (int i = 0; i < MAX_EMPLOYEES; i++) {
+        for (i = 0; i < MAX_EMPLOYEES; i++) {
             if (employees[i].id == ot.empId && ot.month >= 1 && ot.month <= 12) {
-                overtimeHours[i][ot.month - 1] += ot.hours;
+                overtimeHours[i][ot.month - 1] = ot.hours;
                 break;
             }
         }
@@ -588,9 +597,9 @@ void calculateSalary() {
 
     // Step 3: Load all types of leave and count
     while (fread(&leave, sizeof(struct Leave), 1, leaveFile)) {
-        for (int i = 0; i < MAX_EMPLOYEES; i++) {
+        for ( i = 0; i < MAX_EMPLOYEES; i++) {
             if (employees[i].id == leave.employeeID && leave.month >= 1 && leave.month <= 12) {
-                leaveCount[i][leave.month - 1] += leave.count;
+                leaveCount[i][leave.month - 1] = leave.count;
                 break;
             }
         }
@@ -599,11 +608,10 @@ void calculateSalary() {
 
     // Step 4: Final Salary Calculation
     printf("\n--- Final Salary Report (Attendance + Overtime - All Leaves) ---\n");
-    for (int i = 0; i < MAX_EMPLOYEES; i++) {
+    for (i = 0; i < MAX_EMPLOYEES; i++) {
         int totalYearly = 0;
-        int totalMonths = 0;
 
-        for (int m = 0; m < MONTHS; m++) {
+        for ( m = 0; m < MONTHS; m++) {
             if (salaries[i][m] > 0) {
                 int base = salaries[i][m];
                 int otBonus = overtimeHours[i][m] * 200;
@@ -611,33 +619,36 @@ void calculateSalary() {
 
                 int finalSalary = base + otBonus - leavePenalty;
                 if (finalSalary < 0) finalSalary = 0;
-
+                // Overwrite salaries[i][m] with final salary
                 salaries[i][m] = finalSalary;
+                 sal.id = employees[i].id;
+                sal.month = m + 1;
+                sal.salary = finalSalary;
+                fwrite(&sal, sizeof(struct Salary), 1, salaryFile);
+
                 totalYearly += finalSalary;
-                totalMonths++;
             }
         }
-
-        if (totalMonths > 0) {
+       if (totalYearly > 0) {
             sal.id = employees[i].id;
-            sal.monthlySalary = (float)totalYearly / totalMonths;
+            sal.month = 0;
+            sal.salary = totalYearly;
             fwrite(&sal, sizeof(struct Salary), 1, salaryFile);
-
-            // Display
-            printf("\nEmployee: %s (ID: %d)\n", employees[i].name, employees[i].id);
-            for (int m = 0; m < MONTHS; m++) {
-                if (salaries[i][m] > 0) {
-                    printf("  Month %2d: Rs. %d\n", m + 1, salaries[i][m]);
-                }
-            }
-            printf("  Yearly Salary: Rs. %d\n", totalYearly);
-            printf("--------------------------------------------------\n");
         }
+        // Display yearly report
+        printf("\nEmployee: %s (ID: %d)\n", employees[i].name, employees[i].id);
+        for ( m = 0; m < MONTHS; m++) {
+            if (salaries[i][m] > 0) {
+                printf("  Month %2d: Rs. %d\n", m + 1, salaries[i][m]);
+            }
+        }
+
+        printf("  Yearly Salary: Rs. %d\n", totalYearly);
+        printf("--------------------------------------------------\n");
     }
 
     fclose(salaryFile);
 }
-
 void enterOvertime() {
     loadEmployeesFromFile();
 
@@ -657,7 +668,7 @@ void enterOvertime() {
         scanf("%d", &empId);
 
         // Find employee
-        for (int i = 0; i < MAX_EMPLOYEES; i++) {
+        for (i = 0; i < MAX_EMPLOYEES; i++) {
             if (employees[i].id == empId) {
                 empIndex = i;
                 break;
@@ -762,9 +773,75 @@ void viewLeaveStatus(int employeeID) {
         printf("No leave records found for your ID.\n");
     }
 }
+void payrollSystem() {
+    loadEmployeesFromFile();
+
+    FILE *salaryFile = fopen("salaries.dat", "rb");
+    FILE *otFile = fopen("overtime.dat", "rb");
+    struct Salary sal;
+    struct Overtime ot;
+
+    if (!salaryFile || !otFile) {
+        printf("Could not open required files.\n");
+        if (salaryFile) fclose(salaryFile);
+        if (otFile) fclose(otFile);
+        return;
+    }
+
+    // Step 1: Calculate total overtime per employee
+    int overtimeTotal[MAX_EMPLOYEES] = {0};
+
+    while (fread(&ot, sizeof(struct Overtime), 1, otFile)) {
+        for ( i = 0; i < MAX_EMPLOYEES; i++) {
+            if (employees[i].id == ot.empId) {
+                overtimeTotal[i] += ot.hours;
+                break;
+            }
+        }
+    }
+    fclose(otFile);
+
+    // Step 2: Prepare to display monthly and annual salary
+    int monthlySalaries[MAX_EMPLOYEES][MONTHS] = {0};
+    int yearlySalary[MAX_EMPLOYEES] = {0};
+
+    while (fread(&sal, sizeof(struct Salary), 1, salaryFile)) {
+        for ( i = 0; i < MAX_EMPLOYEES; i++) {
+            if (employees[i].id == sal.id) {
+                if (sal.month == 0) {
+                    yearlySalary[i] = sal.salary;  // annual salary
+                } else if (sal.month >= 1 && sal.month <= 12) {
+                    monthlySalaries[i][sal.month - 1] = sal.salary;
+                }
+                break;
+            }
+        }
+    }
+    fclose(salaryFile);
+
+    // Step 3: Display Report
+    printf("\n========================================================================= Annual Payroll Report ============================================================\n\n");
+    printf("ID   Name             Overtime(Hrs)                               Monthly Salaries (Jan-Dec)                                               Annual Salary\n");
+    printf("------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+
+    for ( i = 0; i < MAX_EMPLOYEES; i++) {
+        if (employees[i].id == 0) continue; // Skip unused slots
+
+        printf("%-4d %-18s %-14d ", employees[i].id, employees[i].name, overtimeTotal[i]);
+
+        for  (m = 0; m < MONTHS; m++) {
+            printf("%6d ", monthlySalaries[i][m]);
+        }
+
+        printf("                  Rs. %d\n", yearlySalary[i]);
+    }
+
+    printf("------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+    printf("\n");
+}
 
 
-void checkPerformance() {
+void checkPerformance(int employeeID) {
     printf("[Employee] Checking performance...\n");
 }
 

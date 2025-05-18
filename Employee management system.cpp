@@ -49,11 +49,11 @@ struct salaryRecord {
 };
 //salaries(in enmployee menu)
 struct Salary {
-	int id;
-    int month;
+    int id;
+    int month;  // 1–12 for monthly, 0 for annual
     int salary;
-    float monthlySalary;
 };
+
 
 
 int totalAttendance[MAX_EMPLOYEES] = {0}; // Stores total present days out of 30
@@ -718,33 +718,51 @@ void viewSalary(int employeeID) {
         return;
     }
 
-    struct Salary {
-        int id;
-        float monthlySalary;
-    } sal;
+    struct Salary sal;
 
-    int recordCount = 0, found = 0;
+    int monthlySalary[12] = {0}; // Index 0 => Jan, 11 => Dec
+    int annualSalary = 0;
+    int monthlyFound = 0, annualFound = 0;
 
-    printf("\n--- Reading salaries.dat ---\n");
-    while (fread(&sal, sizeof(sal), 1, file)) {
-        printf("Read record: ID = %d, Monthly Salary = %.2f\n", sal.id, sal.monthlySalary);
+    while (fread(&sal, sizeof(struct Salary), 1, file)) {
         if (sal.id == employeeID) {
-            printf("\n--- Salary Details ---\n");
-            printf("Employee ID     : %d\n", sal.id);
-            printf("Monthly Salary  : Rs. %.2f\n", sal.monthlySalary);
-            printf("Annual Salary   : Rs. %.2f\n", sal.monthlySalary * 12);
-            found = 1;
-            break;
+            if (sal.month >= 1 && sal.month <= 12) {
+                monthlySalary[sal.month - 1] = sal.salary;
+                monthlyFound = 1;
+            } else if (sal.month == 0) {
+                annualSalary = sal.salary;
+                annualFound = 1;
+            }
         }
-        recordCount++;
     }
 
     fclose(file);
 
-    if (!found) {
-        printf("No salary record found for Employee ID: %d\n", employeeID);
+    if (!monthlyFound && !annualFound) {
+        printf("No salary records found for Employee ID: %d\n", employeeID);
+        return;
+    }
+
+    const char *months[] = {
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    };
+
+    printf("\n--- Salary Details for Employee ID: %d ---\n", employeeID);
+    for (int i = 0; i < 12; i++) {
+        printf("Month %2d (%-9s): Rs. %d\n", i + 1, months[i], monthlySalary[i]);
+    }
+
+    if (annualFound) {
+        printf("Yearly Salary: Rs. %d\n", annualSalary);
+    } else {
+        printf("Yearly Salary: Not available\n");
     }
 }
+
+
+
+
 
 void viewLeaveStatus(int employeeID) {
     FILE *lfp = fopen("Leave.dat", "rb");

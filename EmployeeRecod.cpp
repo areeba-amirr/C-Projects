@@ -37,7 +37,7 @@ void getMaskedPassword(char *password, int maxLen) { //password(inputted passwor
 void employeeRecord(){
 	int totalEmployees;
 	struct Employee emp;
-	FILE *ptr=fopen("Employee Record.dat","ab");	
+	FILE *ptr=fopen("EmployeeRecordFile.dat","ab");	
 	printf("Enter total no of employees:");
 	scanf("%d",&totalEmployees);
 	for(int i = 0;i < totalEmployees;i++){
@@ -55,7 +55,7 @@ void employeeRecord(){
 	printf("Record Added Successfully\n");
 	}
 	void displayRecord(){
-	FILE *ptr=fopen("Employee Record.dat","rb");
+	FILE *ptr=fopen("EmployeeRecordFile.dat","rb");
 	if(ptr==NULL){
 		printf("Error in opening file\n");
 		fclose(ptr);}
@@ -63,7 +63,7 @@ void employeeRecord(){
 			struct Employee emp;
             int index = 0;
 			  printf("\nAll Student Records:\n");
-    while (fread(&emp, sizeof(emp), 1, ptr) == 1) {
+    while (fread(&emp, sizeof(struct Employee), 1, ptr) == 1) {
         printf("Index %d => Id: %d, Name: %s, Email:%s ,Password:%s\n", index, emp.id,emp.name,emp.email,emp.password );
         index++;
     }

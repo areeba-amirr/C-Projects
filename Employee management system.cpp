@@ -842,6 +842,66 @@ void payrollSystem() {
 
 
 void checkPerformance(int employeeID) {
-    printf("[Employee] Checking performance...\n");
+    FILE *afp = fopen("Attendance Record.dat", "rb");
+    FILE *ofp = fopen("overtime.dat", "rb");
+
+    if (afp == NULL || ofp == NULL) {
+        printf("Unable to open attendance or overtime file.\n");
+        if (afp) fclose(afp);
+        if (ofp) fclose(ofp);
+        return;
+    }
+
+    const char* performanceLevels[] = {"Poor", "Average", "Good", "Excellent"};
+    int totalPresent = 0, totalOvertime = 0, totalPossibleDays = 0;
+
+    struct attendance att;
+    struct Overtime ot;
+
+    // Step 1: Read Attendance
+    while (fread(&att, sizeof(struct attendance), 1, afp)) {
+        if (att.empId == employeeID) {
+            int workingDays = 30; // Can be customized per month
+            totalPresent += att.presentDays;
+            totalPossibleDays += workingDays;
+        }
+    }
+
+    // Step 2: Read Overtime
+    while (fread(&ot, sizeof(struct Overtime), 1, ofp)) {
+        if (ot.empId == employeeID) {
+            totalOvertime += ot.hours; 
+        }
+    }
+
+    fclose(afp);
+    fclose(ofp);
+
+    // Step 3: Evaluate Performance
+    if (totalPossibleDays == 0) {
+        printf("No attendance records found for Employee ID: %d\n", employeeID);
+        return;
+    }
+
+    float attendanceRate = ((float)totalPresent / totalPossibleDays) * 100;
+    int level = 0;
+
+    if (attendanceRate >= 90)
+        level = 3;
+    else if (attendanceRate >= 75)
+        level = 2;
+    else if (attendanceRate >= 50)
+        level = 1;
+    else
+        level = 0;
+
+    if (totalOvertime >= 5 && level < 3)
+        level++; // Boost due to good overtime effort
+
+    printf("\n--- Employee Performance Report ---\n");
+    printf("Employee ID       : %d\n", employeeID);
+    printf("Attendance Rate   : %.2f%%\n", attendanceRate);
+    printf("Total Overtime    : %d hours (approx)\n", totalOvertime);
+    printf("Performance Level : %s\n", performanceLevels[level]);
 }
 

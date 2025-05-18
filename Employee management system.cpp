@@ -660,6 +660,9 @@ void enterOvertime() {
 
     printf("\n--- Enter Overtime Hours for Employees ---\n");
 
+    // Temporary session-based record to track entered overtime
+    int overtimeEntered[MAX_EMPLOYEES][13] = {0}; // [employeeIndex][month], initialized to 0
+
     char moreEmployees = 'Y';
     while (moreEmployees == 'Y' || moreEmployees == 'y') {
         int empId, empIndex = -1;
@@ -668,7 +671,7 @@ void enterOvertime() {
         scanf("%d", &empId);
 
         // Find employee
-        for (i = 0; i < MAX_EMPLOYEES; i++) {
+        for (int i = 0; i < MAX_EMPLOYEES; i++) {
             if (employees[i].id == empId) {
                 empIndex = i;
                 break;
@@ -681,7 +684,7 @@ void enterOvertime() {
             printf("Entering overtime for %s (ID: %d)\n", employees[empIndex].name, empId);
             while (1) {
                 int month;
-                printf("\nEnter Month (1â€“12) to add overtime (0 to stop for this employee): ");
+                printf("\nEnter Month (1–12) to add overtime (0 to stop for this employee): ");
                 scanf("%d", &month);
 
                 if (month == 0) break;
@@ -691,16 +694,22 @@ void enterOvertime() {
                     continue;
                 }
 
+                // Check if already entered in this session
+                if (overtimeEntered[empIndex][month]) {
+                    printf("Overtime already entered for Month %d for this employee.\n", month);
+                    continue;
+                }
+
                 struct Overtime ot;
                 ot.empId = empId;
                 ot.month = month;
 
                 printf("Enter overtime hours for month %d: ", month);
                 scanf("%d", &ot.hours);
-
                 if (ot.hours < 0) ot.hours = 0;
 
                 fwrite(&ot, sizeof(struct Overtime), 1, fp);
+                overtimeEntered[empIndex][month] = 1; // Mark this month as entered
                 printf("Overtime saved for Month %d.\n", month);
             }
         }
@@ -856,7 +865,7 @@ void payrollSystem() {
         printf(" M%02d ", m + 1);
     }
     printf(" Annual Salary\n");
-    printf("----------------------------------------------------------------------------------------------------------------------------\n");
+    printf("-------------------------------------------------------------------------------------------------------------------------------\n");
 
     for (int i = 0; i < MAX_EMPLOYEES; i++) {
         if (employees[i].id == 0) continue;
@@ -868,7 +877,7 @@ void payrollSystem() {
         printf("     Rs. %d\n", yearlySalary[i]);
     }
 
-    printf("----------------------------------------------------------------------------------------------------------------------------\n");
+    printf("------------------------------------------------------------------------------------------------------------------------------\n");
     printf("TOTAL COMPANY ANNUAL SALARY: Rs. %d\n", companyAnnualSalary);
     printf("============================================================================================================================\n");
 }

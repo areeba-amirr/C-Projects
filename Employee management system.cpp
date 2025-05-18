@@ -760,10 +760,6 @@ void viewSalary(int employeeID) {
     }
 }
 
-
-
-
-
 void viewLeaveStatus(int employeeID) {
     FILE *lfp = fopen("Leave.dat", "rb");
     if (lfp == NULL) {

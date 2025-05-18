@@ -50,7 +50,7 @@ struct salaryRecord {
 //salaries(in enmployee menu)
 struct Salary {
     int id;
-    int month;  // 1–12 for monthly, 0 for annual
+    int month;  // 1-12 for monthly, 0 for annual
     int salary;
 };
 
@@ -61,7 +61,7 @@ struct Employee employees[MAX_EMPLOYEES]; // Track Data for each employee
 struct LeaveRecord leaveRecords[MAX_EMPLOYEES]; // Track leaves for each employee 
 int salaryRecord[MAX_EMPLOYEES][MONTHS] = {0};  // Stores monthly salary for each employee
 int monthlyAttendance[MAX_EMPLOYEES][MONTHS] = {0};  ///Stores monthly attendance for each employee
-int i,m;
+int i,m; //declare looping variable globally
 // Function prototypes
 void getMaskedPassword(char *password, int maxLen);
 void loadEmployeesFromFile();
@@ -73,8 +73,6 @@ void viewSalary(int employeeID);
 void payrollSystem();
 void viewLeaveStatus(int employeeID);
 void checkPerformance(int employeeID);
-void payrollSystem();
-
 
 //int totalAttendance[MAX_EMPLOYEES] = {0}; // Stores total present days out of 30
 int main() {
@@ -102,8 +100,7 @@ int main() {
             while (attempts > 0) {
                 printf("Enter your password: ");
                  getMaskedPassword(enteredPassword, 20);
-
-                if (strcmp(enteredPassword, adminPassword) == 0) {
+                 if (strcmp(enteredPassword, adminPassword) == 0) {
                     success = 1;
                     break;
                 } else {
@@ -167,7 +164,6 @@ int main() {
                     printf("4) Logout\n");
                     printf("Enter your choice (1-4): ");
                     scanf("%d", &employeeChoice);
-//                    int employeeID = employees[i].id; 
                     switch (employeeChoice) {
                         case 1:
                            viewSalary(empId);
@@ -261,7 +257,7 @@ void loadEmployeesFromFile() {
     }
 
     int employeeCount = 0;
-    while (fread(&employees[employeeCount], sizeof(struct Employee), 1, fp) == 1) {
+    while (fread(&employees[employeeCount], sizeof(struct Employee), 1, fp) == 1) { //read employee records from file
         employeeCount++;
         if (employeeCount >= MAX_EMPLOYEES) break;
     }
@@ -275,7 +271,7 @@ void markAttendance() {
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     };
-// Total working days in each month 
+// Total days in each month 
     const int monthWorkingDays[MONTHS] = {
         31, 29, 31, 30, 31, 30, 
         31, 31, 30, 31, 30, 31
@@ -333,7 +329,7 @@ void markAttendance() {
                                employees[i].name, monthNames[monthChoice - 1]);
                         break;
                     }
-
+                     //if not marked
                     int presentDays;
                     printf("Enter number of days %s was present in %s (0-%d): ", 
                            employees[i].name, monthNames[monthChoice - 1], maxDays);
@@ -368,7 +364,6 @@ void markAttendance() {
         }
     }
 }
-// leave management system with file handling !!
 void manageLeaveRequests() {
 
     int empId, month, leaveCount, leaveType;
@@ -423,7 +418,7 @@ if(choice<0 || choice>2){
     continue;
 }
 
-// ? Simple check if already marked
+// Simple check if already marked
 if (leaveRecords[empIndex].sickLeave[month - 1] != 0 ||
     leaveRecords[empIndex].emergencyLeave[month - 1] != 0 ||
     leaveRecords[empIndex].halfDayLeave[month - 1] != 0) {
@@ -431,7 +426,6 @@ if (leaveRecords[empIndex].sickLeave[month - 1] != 0 ||
     printf(" Leave already marked for month %d!\n", month);
     continue;
 }
-
 
                 printf("How many leaves did %s take in month %d? ", employees[empIndex].name, month);
                 scanf("%d", &leaveCount);
@@ -442,7 +436,6 @@ if (leaveRecords[empIndex].sickLeave[month - 1] != 0 ||
                 }
 
                 int monthlySick = 0, monthlyEmergency = 0, monthlyHalf = 0;
-int i;
                 for (i = 0; i < leaveCount; i++) {
                     printf("\nEnter type of leave #%d:\n", i + 1);
                     printf("1. Sick Leave\n2. Emergency Leave\n3. Half Day\nEnter choice: ");
@@ -524,8 +517,7 @@ if (lfp == NULL) {
         } else if (choice == 2) {
             // ---------- Annual Summary ----------
             printf("\n Annual Leave Summary for %s (ID: %d):\n", employees[empIndex].name, employees[empIndex].id);
-            printf("Month\tSick\tEmergency\tHalf Day\n");
-            int m;
+            printf("Month\tSick\tEmergency\tHalf Day\n"); // \t=tab space
             for (m = 0; m < 12; m++) {
                 printf("%d\t%d\t%d\t\t%d\n", m + 1,
                        leaveRecords[empIndex].sickLeave[m],
@@ -549,10 +541,10 @@ if (lfp == NULL) {
 void calculateSalary() {
     loadEmployeesFromFile();
 
-    FILE *attFile = fopen("Attendance Record.dat", "rb");
+    FILE *attFile = fopen("Attendance Record.dat", "rb"); //rb=read binary
     FILE *otFile = fopen("overtime.dat", "rb");
     FILE *leaveFile = fopen("Leave.dat", "rb");
-    FILE *salaryFile = fopen("salaries.dat", "wb");
+    FILE *salaryFile = fopen("salaries.dat", "ab"); //ab= append binary
 
     if (!attFile || !otFile || !leaveFile || !salaryFile) {
         printf("Error opening one or more required files.\n");
@@ -577,7 +569,7 @@ void calculateSalary() {
     	int i;
         for (i = 0; i < MAX_EMPLOYEES; i++) {
             if (employees[i].id == att.empId && att.month >= 1 && att.month <= 12) {
-                salaries[i][att.month - 1] = att.presentDays * BASE_SALARY_PER_DAY;
+                salaries[i][att.month - 1] = att.presentDays * BASE_SALARY_PER_DAY; //calculate salary on the basis of attendance first
                 break;
             }
         }
@@ -817,7 +809,7 @@ void payrollSystem() {
 
     int overtimeTotal[MAX_EMPLOYEES] = {0};
     int leaveTotal[MAX_EMPLOYEES] = {0};
-
+    //read overtime.dat
     while (fread(&ot, sizeof(struct Overtime), 1, otFile)) {
         for (int i = 0; i < MAX_EMPLOYEES; i++) {
             if (employees[i].id == ot.empId) {
@@ -827,7 +819,7 @@ void payrollSystem() {
         }
     }
     fclose(otFile);
-
+    //read leave.dat
     while (fread(&lv, sizeof(struct Leave), 1, leaveFile)) {
         for (int i = 0; i < MAX_EMPLOYEES; i++) {
             if (employees[i].id == lv.employeeID) {
